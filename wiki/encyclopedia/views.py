@@ -8,6 +8,9 @@ class NewPageForm(forms.Form):
     title = forms.CharField(widget=forms.TextInput(attrs={"name":"title"}), label="Title")
     content = forms.CharField(widget=forms.Textarea(attrs={"name":"content", "rows":"5"}), label="Markdown")
 
+class EditEntryForm(forms.Form):
+    content = forms.CharField(widget=forms.Textarea())
+
 
 def index(request):
     return render(request, "encyclopedia/index.html", {
@@ -65,7 +68,6 @@ def newpage(request):
                 util.save_entry(title, content)
                 # Redirect to the new page
                 return redirect("encyclopedia:entry", title=title)
-                #return HttpResponseRedirect(reverse("encyclopedia:index"))
         else:
             return render(request, "encyclopedia/newpage.html", {
                 "form": form,
@@ -73,4 +75,28 @@ def newpage(request):
     # Show new page form
     return render(request, "encyclopedia/newpage.html", {
         "form": NewPageForm(),
+    })
+
+
+def edit(request, title):
+    content = util.get_entry(title)
+
+    if content is None:
+        return render(request, "encyclopedia.error.html", {
+            "message": "This entry does not exist."
+        })
+    
+    if request.method == "POST":
+        form = EditEntryForm(request.POST)
+        if form.is_valid():
+            # Save edited page content
+            util.save_entry(title, form.cleaned_data["content"])
+            # Redirect to the new page
+            return redirect("encyclopedia:entry", title=title)
+    else:
+        form = EditEntryForm(initial={"title": title, "content": content})
+
+    return render(request, "encyclopedia/edit.html", {
+        "form": form,
+        "title": title,
     })

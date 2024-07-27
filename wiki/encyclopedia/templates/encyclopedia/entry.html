@@ -5,6 +5,8 @@
 {% endblock %}
 
 {% block body %}
+
+    <a href="{% url 'encyclopedia:edit' title=title %}" class="btn btn-primary">Edit Page</a>
     
     {{ content|safe }}
 
