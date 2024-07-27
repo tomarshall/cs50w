@@ -2,6 +2,7 @@ import markdown2
 from django import forms
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
+import random
 from . import util
 
 class NewPageForm(forms.Form):
@@ -100,3 +101,14 @@ def edit(request, title):
         "form": form,
         "title": title,
     })
+
+
+def random_page(request):
+    entries = util.list_entries()
+    if entries:
+        random_entry = random.choice(entries)
+        return redirect("encyclopedia:entry", title=random_entry)
+    else:
+        return render(request, "encyclopedia/error.html", {
+            "message": "No entries available",
+        })
