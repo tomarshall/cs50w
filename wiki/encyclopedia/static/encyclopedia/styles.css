@@ -17,6 +17,14 @@ textarea {
     width: 80%;
 }
 
+.align-top {
+    vertical-align: top;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
 .main {
     padding: 10px;
 }
