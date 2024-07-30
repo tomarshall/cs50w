@@ -16,7 +16,7 @@ def create_listing(request):
         if form.is_valid():
             # Saves form (creating a new Listing object)
             form.save()
-            return redirect("create_listing")
+            return redirect("index")
     else:
         # Create empty form
         form = CreateListingForm()
@@ -28,7 +28,10 @@ def create_listing(request):
 
 
 def index(request):
-    return render(request, "auctions/index.html")
+    listings = Listing.objects.all().order_by("-created_at")
+    return render(request, "auctions/index.html", {
+        "listings": listings,
+    })
 
 
 def login_view(request):
