@@ -1,0 +1,39 @@
+{% extends 'auctions/layout.html' %}
+{% load form_tags %}
+
+{% block body %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h2 class="mb-4 text-center">Create New Listing</h2>
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="{{ form.title.id_for_label }}" class="form-label">{{ form.title.label }}</label>
+                    {{ form.title }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
+                    {{ form.description }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.starting_bid.id_for_label }}" class="form-label">{{ form.starting_bid.label }}</label>
+                    <div class="input-group">
+                        <span class="input-group-text">$</span>
+                        {{ form.starting_bid }}
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.image_url.id_for_label }}" class="form-label">{{ form.image_url.label }}</label>
+                    {{ form.image_url }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.category.id_for_label }}" class="form-label">{{ form.category.label }}</label>
+                    {{ form.category }}
+                </div>
+                <button type="submit" class="btn btn-primary">Create Listing</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
