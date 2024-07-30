@@ -1,10 +1,30 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.urls import reverse
 
-from .models import User
+from .forms import CreateListingForm
+from .models import User, Category, Listing
+
+
+def create_listing(request):
+    if request.method == "POST":
+        # Create a form instance with the submitted data
+        form = CreateListingForm(request.POST)
+        # Check if form data is valid
+        if form.is_valid():
+            # Saves form (creating a new Listing object)
+            form.save()
+            return redirect("create_listing")
+    else:
+        # Create empty form
+        form = CreateListingForm()
+
+    # Render template with the form
+    return render(request, "auctions/create_listing.html", {
+        "form": form,
+    })
 
 
 def index(request):
