@@ -1,7 +1,7 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse
 
 from .forms import CreateListingForm
@@ -24,6 +24,13 @@ def create_listing(request):
     # Render template with the form
     return render(request, "auctions/create_listing.html", {
         "form": form,
+    })
+
+
+def listing_detail(request, listing_id):
+    listing = get_object_or_404(Listing, pk=listing_id)
+    return render(request, "auctions/listing_detail.html", {
+        "listing": listing,
     })
 
 
