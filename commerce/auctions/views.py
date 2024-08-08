@@ -1,10 +1,11 @@
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse
 
-from .forms import CreateListingForm
+from .forms import CreateListingForm, BidForm
 from .models import User, Category, Listing
 
 
@@ -29,9 +30,36 @@ def create_listing(request):
 
 def listing_detail(request, listing_id):
     listing = get_object_or_404(Listing, pk=listing_id)
-    return render(request, "auctions/listing_detail.html", {
+    is_watching = listing in request.user.watchlist.all()
+
+    if request.method == "POST":
+        if "watchlist" in request.POST:
+            if is_watching:
+                request.user.watchlist.remove(listing)
+            else:
+                request.user.watchlist.add(listing)
+            return redirect(reverse("listing_detail", args=[listing_id]))
+        if "bid" in request.POST:
+            form = BidForm(request.POST, listing=listing, user=request.user)
+            if form.is_valid():
+                bid = form.save()
+                return redirect("listing_detail", listing_id=listing.id)
+    else:
+        form = BidForm(listing=listing, user=request.user)
+    
+    context = {
         "listing": listing,
-    })
+        "is_watching": is_watching,
+        "form": form
+    }
+
+    return render(request, "auctions/listing_detail.html", context)
+
+
+@login_required
+def watchlist(request):
+    watchlist_items = request.user.watchlist.all()
+    return render(request, "auctions/watchlist.html", {"watchlist_items": watchlist_items})
 
 
 def index(request):
