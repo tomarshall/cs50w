@@ -6,7 +6,7 @@
         {% if listing.image_url %}
             <img src="{{ listing.image_url }}" class="img-fluid mb-3" alt="{{ listing.title }}">
         {% endif %}
-        <p><strong>Price:</strong> ${{ listing.starting_bid }}</p>
+        <p><strong>Current highest bid:</strong> ${{ highest_bid }}</p>
         <p><strong>Description:</strong> {{ listing.description }}</p>
         <!-- Add more details as needed -->
         {% if user.is_authenticated %}

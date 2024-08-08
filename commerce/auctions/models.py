@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.core.validators import MinValueValidator
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.db.models import Max
 
 import datetime
 
@@ -33,6 +34,24 @@ class Listing(models.Model):
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name="listings")
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now=True)
+    current_highest_bid = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+
+    def update_highest_bid(self):
+        highest_bid = self.bids.aggregate(Max('amount'))['amount__max']
+        if highest_bid is not None:
+            self.current_highest_bid = highest_bid
+        else:
+            self.current_highest_bid = self.starting_bid
+        self.save()
+
+    def highest_bid(self):
+        highest_bid = self.bids.order_by('-amount').first()
+        return highest_bid.amount if highest_bid else self.starting_bid
+    
+    def save(self, *args, **kwargs):
+        if self.current_highest_bid is None:
+            self.current_highest_bid = self.starting_bid
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.title
@@ -40,13 +59,17 @@ class Listing(models.Model):
 
 class Bid(models.Model):
     listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="bids")
-    bidder = models.ForeignKey(User, on_delete=models.CASCADE, related_name="bids")
+    bidder = models.ForeignKey(User, on_delete=models.CASCADE)
     amount = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         validators=[MinValueValidator(0.01)],
     )
     timestamp = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.listing.update_highest_bid()
 
     class Meta:
         ordering = ['-amount']

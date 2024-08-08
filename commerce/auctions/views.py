@@ -31,6 +31,7 @@ def create_listing(request):
 def listing_detail(request, listing_id):
     listing = get_object_or_404(Listing, pk=listing_id)
     is_watching = listing in request.user.watchlist.all()
+    form = BidForm(listing=listing, user=request.user)
 
     if request.method == "POST":
         if "watchlist" in request.POST:
@@ -39,20 +40,19 @@ def listing_detail(request, listing_id):
             else:
                 request.user.watchlist.add(listing)
             return redirect(reverse("listing_detail", args=[listing_id]))
+        
         if "bid" in request.POST:
             form = BidForm(request.POST, listing=listing, user=request.user)
             if form.is_valid():
-                bid = form.save()
+                form.save()
                 return redirect("listing_detail", listing_id=listing.id)
-    else:
-        form = BidForm(listing=listing, user=request.user)
-    
+
     context = {
         "listing": listing,
         "is_watching": is_watching,
-        "form": form
+        "form": form,
+        "highest_bid": listing.highest_bid()
     }
-
     return render(request, "auctions/listing_detail.html", context)
 
 
