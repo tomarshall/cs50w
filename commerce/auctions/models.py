@@ -35,6 +35,7 @@ class Listing(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now=True)
     current_highest_bid = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name="selling")
 
     def update_highest_bid(self):
         highest_bid = self.bids.aggregate(Max('amount'))['amount__max']

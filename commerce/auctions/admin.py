@@ -5,7 +5,7 @@ from .models import Category, Listing, User, Bid
 
 # Register your models here.
 class ListingAdmin(admin.ModelAdmin):
-    list_display = ["title", "starting_bid", "category", "created_at", "last_updated"]
+    list_display = ["title", "seller", "starting_bid", "category", "created_at", "last_updated"]
 
 
 class BidAdmin(admin.ModelAdmin):

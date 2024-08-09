@@ -6,7 +6,7 @@ from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse
 
 from .forms import CreateListingForm, BidForm
-from .models import User, Category, Listing
+from .models import User, Listing
 
 
 def create_listing(request):
@@ -16,7 +16,9 @@ def create_listing(request):
         # Check if form data is valid
         if form.is_valid():
             # Saves form (creating a new Listing object)
-            form.save()
+            item = form.save(commit=False)
+            item.seller = request.user
+            item.save()
             return redirect("index")
     else:
         # Create empty form
