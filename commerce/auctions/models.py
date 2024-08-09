@@ -35,12 +35,16 @@ class Listing(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now=True)
     current_highest_bid = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    current_highest_bidder = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name="highest_bids")
     seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name="selling")
+    active = models.BooleanField(default=True)
+    winner = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name="won_auctions")
 
     def update_highest_bid(self):
-        highest_bid = self.bids.aggregate(Max('amount'))['amount__max']
-        if highest_bid is not None:
-            self.current_highest_bid = highest_bid
+        highest_bid = self.bids.order_by('-amount').first()
+        if highest_bid:
+            self.current_highest_bid = highest_bid.amount
+            self.current_highest_bidder = highest_bid.bidder
         else:
             self.current_highest_bid = self.starting_bid
         self.save()
@@ -53,6 +57,12 @@ class Listing(models.Model):
         if self.current_highest_bid is None:
             self.current_highest_bid = self.starting_bid
         super().save(*args, **kwargs)
+        self.update_highest_bid()
+
+    def close_auction(self):
+        self.active = False
+        self.winner = self.current_highest_bidder
+        self.save()
 
     def __str__(self):
         return self.title

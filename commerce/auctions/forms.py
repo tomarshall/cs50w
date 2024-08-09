@@ -64,3 +64,7 @@ class BidForm(forms.ModelForm):
         if commit:
             instance.save()
         return instance
+    
+
+class CloseAuctionForm(forms.Form):
+    pass # No fields needed, just a submit button in the template
