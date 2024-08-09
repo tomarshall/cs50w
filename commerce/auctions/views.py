@@ -1,5 +1,6 @@
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import redirect, render, get_object_or_404
@@ -33,8 +34,9 @@ def create_listing(request):
 def listing_detail(request, listing_id):
     listing = get_object_or_404(Listing, pk=listing_id)
     is_watching = listing in request.user.watchlist.all()
-    form = BidForm(listing=listing, user=request.user)
-
+    is_owner = request.user == listing.seller
+    is_winner = request.user.is_authenticated and listing.winner == request.user
+    
     if request.method == "POST":
         if "watchlist" in request.POST:
             if is_watching:
@@ -46,14 +48,25 @@ def listing_detail(request, listing_id):
         if "bid" in request.POST:
             form = BidForm(request.POST, listing=listing, user=request.user)
             if form.is_valid():
-                form.save()
+                bid = form.save()
+                messages.success(request, f"Your bid of ${bid.amount} was placed successfully.")
                 return redirect("listing_detail", listing_id=listing.id)
+        
+        if "close_auction" in request.POST and is_owner and listing.active:
+            listing.close_auction()
+            messages.success(request, "Auction closed successfully.")
+            return redirect("listing_detail", listing_id=listing_id)
+    else:
+        form = BidForm(listing=listing, user=request.user)
 
     context = {
         "listing": listing,
+        "is_active": listing.active,
         "is_watching": is_watching,
         "form": form,
-        "highest_bid": listing.highest_bid()
+        "highest_bid": listing.highest_bid(),
+        "is_owner": is_owner,
+        "is_winner": is_winner,
     }
     return render(request, "auctions/listing_detail.html", context)
 

@@ -47,6 +47,7 @@ class Listing(models.Model):
             self.current_highest_bidder = highest_bid.bidder
         else:
             self.current_highest_bid = self.starting_bid
+            self.current_highest_bidder = None
         self.save()
 
     def highest_bid(self):
@@ -57,7 +58,6 @@ class Listing(models.Model):
         if self.current_highest_bid is None:
             self.current_highest_bid = self.starting_bid
         super().save(*args, **kwargs)
-        self.update_highest_bid()
 
     def close_auction(self):
         self.active = False
@@ -81,6 +81,7 @@ class Bid(models.Model):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         self.listing.update_highest_bid()
+        self.listing.save()
 
     class Meta:
         ordering = ['-amount']
