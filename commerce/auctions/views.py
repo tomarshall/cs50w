@@ -2,12 +2,12 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db import IntegrityError
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse
 
-from .forms import CreateListingForm, BidForm
-from .models import User, Listing
+from .forms import CreateListingForm, BidForm, CommentForm
+from .models import User, Listing, Comment, Upvote
 
 
 def create_listing(request):
@@ -33,10 +33,21 @@ def create_listing(request):
 
 def listing_detail(request, listing_id):
     listing = get_object_or_404(Listing, pk=listing_id)
-    is_watching = listing in request.user.watchlist.all()
-    is_owner = request.user == listing.seller
-    is_winner = request.user.is_authenticated and listing.winner == request.user
+
+    if request.user.is_authenticated:
+        is_watching = listing in request.user.watchlist.all()
+        is_owner = request.user == listing.seller
+        is_winner = request.user.is_authenticated and listing.winner == request.user
+    else:
+        is_watching = False
+        is_owner = False
+        is_winner = False
     
+    comments = listing.comments.all()
+    
+    bid_form = BidForm(listing=listing, user=request.user)
+    comment_form = CommentForm()
+
     if request.method == "POST":
         if "watchlist" in request.POST:
             if is_watching:
@@ -46,9 +57,9 @@ def listing_detail(request, listing_id):
             return redirect(reverse("listing_detail", args=[listing_id]))
         
         if "bid" in request.POST:
-            form = BidForm(request.POST, listing=listing, user=request.user)
-            if form.is_valid():
-                bid = form.save()
+            bid_form = BidForm(request.POST, listing=listing, user=request.user)
+            if bid_form.is_valid():
+                bid = bid_form.save()
                 messages.success(request, f"Your bid of ${bid.amount} was placed successfully.")
                 return redirect("listing_detail", listing_id=listing.id)
         
@@ -56,19 +67,58 @@ def listing_detail(request, listing_id):
             listing.close_auction()
             messages.success(request, "Auction closed successfully.")
             return redirect("listing_detail", listing_id=listing_id)
-    else:
-        form = BidForm(listing=listing, user=request.user)
+        
+        if "comment" in request.POST and request.user.is_authenticated:
+            comment_form = CommentForm(request.POST)
+            if comment_form.is_valid():
+                comment = comment_form.save(commit=False)
+                comment.listing = listing
+                comment.user = request.user
+                comment.save()
+                messages.success(request, "Your comment has been posted.")
+                return redirect("listing_detail", listing_id=listing_id)
+        
+        if "upvote" in request.POST:
+            comment_id = request.POST.get("comment_id")
+            comment = get_object_or_404(Comment, id=comment_id)
+            comment.upvotes += 1
+            comment.save()
+            messages.success(request, "Comment upvoted.")
+            return redirect("listing_detail", listing_id=listing_id)
 
     context = {
         "listing": listing,
         "is_active": listing.active,
         "is_watching": is_watching,
-        "form": form,
+        "bid_form": bid_form,
         "highest_bid": listing.highest_bid(),
         "is_owner": is_owner,
         "is_winner": is_winner,
+        "comments": comments,
+        "comment_form": comment_form
     }
     return render(request, "auctions/listing_detail.html", context)
+
+
+@login_required
+def upvote_comment(request, comment_id):
+    comment = get_object_or_404(Comment, pk=comment_id)
+    user = request.user
+
+    # Check if the user has already upvoted this comment
+    upvote, created = Upvote.objects.get_or_create(user=user, comment=comment)
+
+    if created:
+        # This is a new upvote
+        comment.Upvote += 1
+        comment.save()
+    else:
+        # This is a toggle of an existing upvote
+        upvote.delete()
+        comment.Upvote -= 1
+        comment.save()
+    
+    return JsonResponse({"Upvote": comment.Upvote})
 
 
 @login_required

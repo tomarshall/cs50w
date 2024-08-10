@@ -91,4 +91,23 @@ class Bid(models.Model):
 
 
 class Comment(models.Model):
-    pass
+    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="comments")
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    upvotes = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["-created_at"]
+    
+    def __str__(self):
+        return f"Comment by {self.user.username} on {self.listing.title}"
+    
+
+class Upvote(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "comment")

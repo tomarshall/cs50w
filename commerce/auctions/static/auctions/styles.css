@@ -1,3 +1,7 @@
 body {
     padding: 10px;
 }
+
+.comment-form textarea {
+    width: 100%;
+}

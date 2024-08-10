@@ -1,6 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
-from .models import Listing, Category, Bid
+from .models import Listing, Category, Bid, Comment
 
 class CreateListingForm(forms.ModelForm):
     category = forms.ModelChoiceField(
@@ -68,3 +68,18 @@ class BidForm(forms.ModelForm):
 
 class CloseAuctionForm(forms.Form):
     pass # No fields needed, just a submit button in the template
+
+
+class CommentForm(forms.ModelForm):
+    content = forms.CharField(
+        widget=forms.Textarea(attrs={
+            "rows": 4,
+            "placeholder": "Write your comment here...",
+            "style": "width: 100%",
+        }),
+        label=""
+    )
+
+    class Meta:
+        model = Comment
+        fields = ["content"]
