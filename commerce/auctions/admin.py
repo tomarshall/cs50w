@@ -4,6 +4,9 @@ from django.contrib.auth.admin import UserAdmin
 from .models import Category, Listing, User, Bid, Comment, Upvote
 
 # Register your models here.
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ["listing", "user", "content", "upvotes", "created_at"]
+
 class ListingAdmin(admin.ModelAdmin):
     list_display = ["title", "seller", "starting_bid", "current_highest_bidder", "current_highest_bid", "category", "created_at", "active"]
 
@@ -24,5 +27,5 @@ admin.site.register(Category)
 admin.site.register(Listing, ListingAdmin)
 admin.site.register(User, UserAdmin)
 admin.site.register(Bid, BidAdmin)
-admin.site.register(Comment)
+admin.site.register(Comment, CommentAdmin)
 admin.site.register(Upvote)

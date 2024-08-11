@@ -36,6 +36,7 @@ def category_detail(request, category_id):
     return render(request, "auctions/category_detail.html", context)
 
 
+@login_required
 def create_listing(request):
     if request.method == "POST":
         # Create a form instance with the submitted data
