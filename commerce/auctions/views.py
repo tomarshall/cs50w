@@ -23,7 +23,7 @@ def category_detail(request, category_id):
     # Get all active listings in this category
     listings = Listing.objects.filter(category=category).order_by('-created_at')
 
-    # Pagination (optional, but recommended for large numbers of listings)
+    # Pagination (not important -- just for when there's more listings)
     paginator = Paginator(listings, 10) # Show 10 listings per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -31,7 +31,7 @@ def category_detail(request, category_id):
     context = {
         "category": category,
         "page_obj": page_obj,
-        "listings": page_obj, # For backwards compatibility if you're not using pagination in template
+        "listings": page_obj,
     }
     return render(request, "auctions/category_detail.html", context)
 
