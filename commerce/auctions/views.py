@@ -4,10 +4,36 @@ from django.contrib import messages
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import redirect, render, get_object_or_404
+from django.core.paginator import Paginator
 from django.urls import reverse
 
 from .forms import CreateListingForm, BidForm, CommentForm
-from .models import User, Listing, Comment
+from .models import User, Listing, Comment, Category
+
+
+def categories(request):
+    categories = Category.objects.all()
+    return render(request, "auctions/categories.html", {"categories": categories})
+
+
+def category_detail(request, category_id):
+    # Get the category or return a 404 if not found
+    category = get_object_or_404(Category, id=category_id)
+    
+    # Get all active listings in this category
+    listings = Listing.objects.filter(category=category).order_by('-created_at')
+
+    # Pagination (optional, but recommended for large numbers of listings)
+    paginator = Paginator(listings, 10) # Show 10 listings per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        "category": category,
+        "page_obj": page_obj,
+        "listings": page_obj, # For backwards compatibility if you're not using pagination in template
+    }
+    return render(request, "auctions/category_detail.html", context)
 
 
 def create_listing(request):
@@ -108,9 +134,7 @@ def watchlist(request):
 
 def index(request):
     listings = Listing.objects.all().order_by("-created_at")
-    return render(request, "auctions/index.html", {
-        "listings": listings,
-    })
+    return render(request, "auctions/index.html", {"listings": listings,})
 
 
 def login_view(request):

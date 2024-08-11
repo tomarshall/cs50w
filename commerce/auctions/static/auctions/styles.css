@@ -1,5 +1,9 @@
 body {
-    padding: 10px;
+    width: 85%;
+    padding: 15px;
+    margin-top: 35px;
+    margin-right: auto;
+    margin-left: auto;
 }
 
 .comment-form textarea {
