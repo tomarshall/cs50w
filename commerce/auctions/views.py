@@ -101,27 +101,6 @@ def listing_detail(request, listing_id):
 
 
 @login_required
-def upvote_comment(request, comment_id):
-    comment = get_object_or_404(Comment, pk=comment_id)
-    user = request.user
-
-    # Check if the user has already upvoted this comment
-    upvote, created = Upvote.objects.get_or_create(user=user, comment=comment)
-
-    if created:
-        # This is a new upvote
-        comment.Upvote += 1
-        comment.save()
-    else:
-        # This is a toggle of an existing upvote
-        upvote.delete()
-        comment.Upvote -= 1
-        comment.save()
-    
-    return JsonResponse({"Upvote": comment.Upvote})
-
-
-@login_required
 def watchlist(request):
     watchlist_items = request.user.watchlist.all()
     return render(request, "auctions/watchlist.html", {"watchlist_items": watchlist_items})
